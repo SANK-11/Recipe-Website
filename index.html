@@ -142,11 +142,7 @@
   </nav>
 </header>
 
-<div class="setup-banner" id="setupBanner">
-  <div><strong>⚙️ Connect Google Sheets:</strong> Paste your <a href="#" onclick="showSetupHelp();return false;">Apps Script URL</a> to enable cloud sync.</div>
-  <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/…/exec" oninput="handleUrlInput(this.value)" />
-  <button id="dismissBanner" onclick="dismissBanner()" title="Dismiss">✕</button>
-</div>
+
 
 <div class="hero">
   <h1>Our Recipe Collection</h1>
@@ -162,6 +158,7 @@
   <button class="tag-btn" onclick="setCategory('breakfast',this)">🌅 Breakfast</button>
   <button class="tag-btn" onclick="setCategory('lunch',this)">🥗 Lunch</button>
   <button class="tag-btn" onclick="setCategory('dinner',this)">🍽 Dinner</button>
+  <button class="tag-btn" onclick="setCategory('chicken',this)">🍗 Chicken</button>
   <button class="tag-btn" onclick="setCategory('dessert',this)">🍰 Dessert</button>
   <button class="tag-btn" onclick="setCategory('snack',this)">🥨 Snack</button>
   <button class="tag-btn" onclick="setCategory('drink',this)">🥤 Drink</button>
@@ -186,7 +183,7 @@
     <div class="modal-body">
       <div class="form-group"><label>Recipe Name *</label><input type="text" id="rName" placeholder="e.g. Grandma's Chicken Soup" /></div>
       <div class="form-row">
-        <div class="form-group"><label>Category</label><select id="rCategory"><option value="other">Other</option><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="dessert">Dessert</option><option value="snack">Snack</option><option value="drink">Drink</option></select></div>
+        <div class="form-group"><label>Category</label><select id="rCategory"><option value="other">Other</option><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="chicken">Chicken</option><option value="dessert">Dessert</option><option value="snack">Snack</option><option value="drink">Drink</option></select></div>
         <div class="form-group"><label>Servings</label><input type="number" id="rServings" placeholder="4" min="1" /></div>
       </div>
       <div class="form-row">
@@ -211,27 +208,7 @@
   <div class="modal"><div id="viewContent"></div></div>
 </div>
 
-<!-- SETUP HELP MODAL -->
-<div class="modal-overlay" id="helpModal" style="display:none" onclick="closeModalOnOverlay(event,'helpModal')">
-  <div class="modal">
-    <div class="modal-header"><h2>How to Connect Google Sheets</h2><button class="close-btn" onclick="closeModal('helpModal')">✕</button></div>
-    <div class="modal-body" style="font-size:0.92rem;line-height:1.7">
-      <ol style="padding-left:1.4rem;display:flex;flex-direction:column;gap:0.9rem">
-        <li>Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--amber)">sheets.google.com</a> and create a <strong>new blank spreadsheet</strong>.</li>
-        <li>Click <strong>Extensions → Apps Script</strong>.</li>
-        <li>Delete all existing code, then <strong>paste the entire contents of <code>code.gs</code></strong>.</li>
-        <li>Click <strong>Save</strong>, then <strong>Deploy → New deployment</strong>.</li>
-        <li>Set type to <strong>Web app</strong>. Set <em>Execute as</em> → <strong>Me</strong>, <em>Who has access</em> → <strong>Anyone</strong>. Click <strong>Deploy</strong>.</li>
-        <li>Authorize the permissions when prompted.</li>
-        <li>Copy the <strong>Web app URL</strong> and paste it into the yellow banner on this page.</li>
-      </ol>
-      <div style="margin-top:1.2rem;padding:0.8rem 1rem;background:#fff8ed;border-radius:8px;border-left:3px solid var(--amber-light);font-size:0.85rem;color:var(--muted)">
-        💡 The URL looks like: <code style="word-break:break-all;font-size:0.8rem">https://script.google.com/macros/s/ABC…/exec</code>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('helpModal')">Got it</button></div>
-  </div>
-</div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -242,29 +219,15 @@
   let currentCategory = 'all';
   let editingId = null;
   let selectedEmoji = '🍳';
-  let SCRIPT_URL = localStorage.getItem('recipeBox_scriptUrl') || '';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOGbkXTAvnk74SgaPrhnLBX8pGflXRNr9cp4KVkL_OQPbIU2zDgbYDOlNWZLPQz8Q9/exec';
 
   window.addEventListener('DOMContentLoaded', () => {
-    if (SCRIPT_URL) {
-      document.getElementById('scriptUrlInput').value = SCRIPT_URL;
-      document.getElementById('setupBanner').style.display = 'none';
-      refreshFromSheet();
-    } else {
-      renderSkeletons();
-    }
+    refreshFromSheet();
   });
 
-  function handleUrlInput(val) {
-    val = val.trim();
-    if (val.startsWith('https://script.google.com/macros/s/') && val.endsWith('/exec')) {
-      SCRIPT_URL = val;
-      localStorage.setItem('recipeBox_scriptUrl', val);
-      document.getElementById('setupBanner').style.display = 'none';
-      refreshFromSheet();
-    }
-  }
-  function dismissBanner() { document.getElementById('setupBanner').style.display = 'none'; renderRecipes(); }
-  function showSetupHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+  function handleUrlInput() {}
+  function dismissBanner() {}
+  function showSetupHelp() {}
 
   function setSyncState(state, label) {
     document.getElementById('syncDot').className = 'sync-dot ' + state;
