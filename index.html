@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deep's Kitchen</title>
+  <title>Deeps Kitchen</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
@@ -102,7 +102,12 @@
     .emoji-opt { font-size: 1.5rem; padding: 0.25rem 0.35rem; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; background: var(--cream); }
     .emoji-opt:hover { border-color: var(--amber-light); transform: scale(1.1); }
     .emoji-opt.selected { border-color: var(--amber); background: #dbeafe; }
-    .modal-footer { padding: 1rem 1.5rem 1.5rem; display: flex; gap: 0.7rem; justify-content: flex-end; border-top: 1px solid var(--border); }
+    .quick-add-wrap { margin-bottom: 0.5rem; }
+    .quick-add-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; display: block; }
+    .quick-add-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .quick-chip { padding: 0.22rem 0.65rem; border-radius: 14px; border: 1.5px solid var(--border); background: var(--cream); color: var(--brown); font-family: 'DM Sans', sans-serif; font-size: 0.76rem; font-weight: 500; cursor: pointer; transition: all 0.15s; user-select: none; }
+    .quick-chip:hover { background: var(--brown); color: var(--cream); border-color: var(--brown); }
+    .quick-chip.added { background: #dbeafe; border-color: var(--amber); color: var(--amber); }
 
     .view-emoji { font-size: 4rem; text-align: center; padding: 1.2rem 0 0.8rem; background: linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%); }
     .view-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin: 0.8rem 0 1.2rem; font-size: 0.88rem; color: var(--muted); }
@@ -125,7 +130,7 @@
 <body>
 
 <header>
-  <div class="logo"><span>🍳</span> Deep's Kitchen</div>
+  <div class="logo"><span>🍳</span> Deeps Kitchen</div>
   <nav>
     <div class="sync-pill" onclick="refreshFromSheet()" title="Click to refresh">
       <div class="sync-dot" id="syncDot"></div>
@@ -137,7 +142,7 @@
 </header>
 
 <div class="hero">
-  <h1>Deep's Kitchen</h1>
+  <h1>Deeps Kitchen</h1>
   <p>A shared cookbook — add yours and inspire others</p>
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search by name, ingredient, or tag…" oninput="renderRecipes()" />
@@ -174,7 +179,14 @@
         <div class="form-group"><label>Cook Time (mins)</label><input type="number" id="rCookTime" placeholder="30" min="0" /></div>
       </div>
       <div class="form-group"><label>Pick an Emoji</label><div class="emoji-picker" id="emojiPicker"></div></div>
-      <div class="form-group"><label>Ingredients (one per line) *</label><textarea id="rIngredients" placeholder="2 cups flour&#10;1 tsp salt&#10;3 eggs"></textarea></div>
+      <div class="form-group">
+        <label>Ingredients (one per line) *</label>
+        <div class="quick-add-wrap">
+          <span class="quick-add-label">⚡ Quick add common ingredients:</span>
+          <div class="quick-add-chips" id="quickChips"></div>
+        </div>
+        <textarea id="rIngredients" placeholder="2 cups flour&#10;1 tsp salt&#10;3 eggs"></textarea>
+      </div>
       <div class="form-group"><label>Instructions (one step per line)</label><textarea id="rSteps" placeholder="Preheat oven to 350°F&#10;Mix dry ingredients"></textarea></div>
       <div class="form-group"><label>Tags (comma-separated)</label><input type="text" id="rTags" placeholder="vegetarian, quick, family favorite" /></div>
       <div class="form-group"><label>Notes</label><textarea id="rNotes" placeholder="Tips, substitutions, memories…" style="min-height:60px"></textarea></div>
@@ -394,6 +406,33 @@
     renderRecipes();
   }
 
+  const QUICK_INGREDIENTS = [
+    'Salt','Chilli Powder','Coriander Powder','Cumin Powder','Turmeric Powder',
+    'Garam Masala','Onion','Tomatoes','Ginger Garlic Paste','Green Chilly',
+    'Yogurt','Pepper Powder','Coriander Leaves','Oil','Water','Sugar',
+    'Mustard Seeds','Curry Leaves','Bay Leaf','Cardamom', 'cloves', 'cinnamon' , 'jeera seeds', 'Kashmiri Chilli Powder' , 'Urad Dal' , 'Toor Dal' , 'Channa Dal' , 'Masoor Dal', 'Rice' , 'Eggs' , 'Chaat Masala' , 'Lemon Juice'
+  ];
+
+  function buildQuickChips() {
+    const ta = document.getElementById('rIngredients');
+    document.getElementById('quickChips').innerHTML = QUICK_INGREDIENTS.map(ing => {
+      const already = ta.value.split('\n').some(l => l.trim().toLowerCase() === ing.toLowerCase());
+      return `<span class="quick-chip${already?' added':''}" data-ing="${ing}" onclick="quickAddIngredient(this)">${ing}</span>`;
+    }).join('');
+  }
+
+  function quickAddIngredient(el) {
+    const ing = el.getAttribute('data-ing');
+    const ta = document.getElementById('rIngredients');
+    const lines = ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    if (lines.some(l => l.toLowerCase() === ing.toLowerCase())) {
+      ta.value = lines.filter(l => l.toLowerCase() !== ing.toLowerCase()).join('\n');
+      el.classList.remove('added');
+    } else {
+      ta.value = lines.length ? lines.join('\n') + '\n' + ing : ing;
+      el.classList.add('added');
+    }
+  }
   function buildEmojiPicker() {
     document.getElementById('emojiPicker').innerHTML = EMOJIS.map(e=>
       `<span class="emoji-opt${e===selectedEmoji?' selected':''}" onclick="selectEmoji('${e}',this)">${e}</span>`
@@ -426,6 +465,7 @@
       document.getElementById('rCategory').value = categories[0]?.id || 'other';
     }
     buildEmojiPicker();
+    buildQuickChips();
     document.getElementById('addModal').style.display = 'flex';
   }
 
