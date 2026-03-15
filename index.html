@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deeps Kitchen</title>
+  <title>Deep's Kitchen</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
@@ -124,25 +124,38 @@
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--brown); color: var(--cream); padding: 0.75rem 1.4rem; border-radius: 10px; font-size: 0.9rem; z-index: 999; transition: transform 0.28s ease; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
+    .random-cat-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+    .random-cat-btn { padding: 0.4rem 0.9rem; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; color: var(--brown); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .random-cat-btn:hover { background: var(--cream); border-color: var(--amber); color: var(--amber); }
+    .random-cat-btn.selected { background: var(--brown); color: var(--cream); border-color: var(--brown); }
+    .random-result { border-radius: 14px; border: 1px solid var(--border); overflow: hidden; animation: slideUp 0.25s ease; }
+    .random-result-emoji { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
+    .random-result-body { padding: 1.1rem 1.2rem; background: var(--cream); }
+    .random-result-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); margin-bottom: 0.3rem; }
+    .random-result-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.8rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .random-empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.92rem; }
+    .random-actions { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
+
     @media(max-width:600px){ main{padding:1rem} .form-row{grid-template-columns:1fr} header{padding:0 1rem} .hero{padding:2rem 1rem 1.8rem} }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><span>🍳</span> Deeps Kitchen</div>
+  <div class="logo"><span>🍳</span> Deep's Kitchen</div>
   <nav>
     <div class="sync-pill" onclick="refreshFromSheet()" title="Click to refresh">
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">Not connected</span>
     </div>
     <button class="btn btn-ghost" onclick="openCatModal()">⚙️ Categories</button>
+    <button class="btn btn-ghost" onclick="openRandomModal()">🎲 Random Dish</button>
     <button class="btn btn-primary" onclick="openAddModal()">+ Add Recipe</button>
   </nav>
 </header>
 
 <div class="hero">
-  <h1>Deeps Kitchen</h1>
+  <h1>Deep's Kitchen</h1>
   <p>A shared cookbook — add yours and inspire others</p>
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search by name, ingredient, or tag…" oninput="renderRecipes()" />
@@ -225,6 +238,25 @@
   </div>
 </div>
 
+<!-- RANDOM DISH MODAL -->
+<div class="modal-overlay" id="randomModal" style="display:none" onclick="closeModalOnOverlay(event,'randomModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🎲 Random Dish</h2>
+      <button class="close-btn" onclick="closeModal('randomModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <label style="margin-bottom:0.5rem;display:block">Pick a category:</label>
+      <div class="random-cat-grid" id="randomCatGrid"></div>
+      <div id="randomResult"></div>
+      <div class="random-actions" id="randomActions" style="display:none">
+        <button class="btn btn-primary" style="flex:1" onclick="pickRandom()">🎲 Randomise Again</button>
+        <button class="btn btn-sage" onclick="viewRandomRecipe()">👁 View Recipe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -260,7 +292,12 @@
   let selectedEmoji = '🍳';
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOGbkXTAvnk74SgaPrhnLBX8pGflXRNr9cp4KVkL_OQPbIU2zDgbYDOlNWZLPQz8Q9/exec';
 
-  function saveCategories() { localStorage.setItem('deepKitchen_cats', JSON.stringify(categories)); }
+  function saveCategories() {
+    localStorage.setItem('deepKitchen_cats', JSON.stringify(categories));
+    // Also sync to Google Sheet in the background
+    api({ action: 'saveCategories', data: JSON.stringify(categories) })
+      .catch(() => {}); // silent fail — localStorage is the backup
+  }
 
   function renderFilterBar() {
     document.getElementById('filtersBar').innerHTML =
@@ -354,7 +391,13 @@
       const data = await api({ action: 'getAll' });
       if (data.error) throw new Error(data.error);
       recipes = data.recipes || [];
+      // If sheet has categories, use those (overrides localStorage)
+      if (data.categories && Array.isArray(data.categories) && data.categories.length) {
+        categories = data.categories;
+        localStorage.setItem('deepKitchen_cats', JSON.stringify(categories));
+      }
       setSyncState('connected', 'Synced ✓');
+      renderFilterBar();
       renderRecipes();
     } catch (err) {
       setSyncState('error', 'Sync error');
@@ -410,7 +453,7 @@
     'Salt','Chilli Powder','Coriander Powder','Cumin Powder','Turmeric Powder',
     'Garam Masala','Onion','Tomatoes','Ginger Garlic Paste','Green Chilly',
     'Yogurt','Pepper Powder','Coriander Leaves','Oil','Water','Sugar',
-    'Mustard Seeds','Curry Leaves','Bay Leaf','Cardamom', 'cloves', 'cinnamon' , 'jeera seeds', 'Kashmiri Chilli Powder' , 'Urad Dal' , 'Toor Dal' , 'Channa Dal' , 'Masoor Dal', 'Rice' , 'Eggs' , 'Chaat Masala' , 'Lemon Juice'
+    'Mustard Seeds','Curry Leaves','Bay Leaf','Cardamom'
   ];
 
   function buildQuickChips() {
@@ -544,6 +587,71 @@
     } catch { setSyncState('error', 'Delete failed'); showToast('Could not delete from Google Sheets.'); return; }
     recipes = recipes.filter(r=>r.id!==id);
     closeModal('viewModal'); renderRecipes(); showToast('Recipe deleted.');
+  }
+
+  // ── RANDOM DISH ──────────────────────────────────────
+  let randomSelectedCat = null;
+  let lastRandomRecipe = null;
+
+  function openRandomModal() {
+    randomSelectedCat = null;
+    lastRandomRecipe = null;
+    document.getElementById('randomResult').innerHTML = '';
+    document.getElementById('randomActions').style.display = 'none';
+    buildRandomCatGrid();
+    document.getElementById('randomModal').style.display = 'flex';
+  }
+
+  function buildRandomCatGrid() {
+    document.getElementById('randomCatGrid').innerHTML =
+      `<button class="random-cat-btn${randomSelectedCat===null?' selected':''}" onclick="selectRandomCat(null,this)">🍽 Any Category</button>` +
+      categories.map(c =>
+        `<button class="random-cat-btn${randomSelectedCat===c.id?' selected':''}" onclick="selectRandomCat('${c.id}',this)">${c.emoji} ${c.label}</button>`
+      ).join('');
+  }
+
+  function selectRandomCat(id, el) {
+    randomSelectedCat = id;
+    document.querySelectorAll('.random-cat-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    pickRandom();
+  }
+
+  function pickRandom() {
+    const pool = recipes.filter(r => randomSelectedCat === null || r.category === randomSelectedCat);
+    if (!pool.length) {
+      document.getElementById('randomResult').innerHTML = `<div class="random-empty">😕 No recipes found in this category yet.<br>Add some first!</div>`;
+      document.getElementById('randomActions').style.display = 'none';
+      lastRandomRecipe = null;
+      return;
+    }
+    // Avoid showing the same dish twice in a row if possible
+    let candidates = pool.filter(r => !lastRandomRecipe || r.id !== lastRandomRecipe.id);
+    if (!candidates.length) candidates = pool;
+    const r = candidates[Math.floor(Math.random() * candidates.length)];
+    lastRandomRecipe = r;
+    const total = (r.prepTime||0) + (r.cookTime||0);
+    const catLabel = categories.find(c => c.id === r.category)?.label || r.category;
+    document.getElementById('randomResult').innerHTML = `
+      <div class="random-result">
+        <div class="random-result-emoji">${r.emoji || '🍳'}</div>
+        <div class="random-result-body">
+          <div class="random-result-name">${esc(r.name)}</div>
+          <div class="random-result-meta">
+            ${total ? `<span>⏱ ${total} min</span>` : ''}
+            ${r.servings ? `<span>👤 Serves ${r.servings}</span>` : ''}
+            <span>📂 ${catLabel}</span>
+          </div>
+          ${r.ingredients?.length ? `<div style="font-size:0.82rem;color:var(--muted)">${r.ingredients.slice(0,4).map(i=>esc(i)).join(' · ')}${r.ingredients.length > 4 ? ' · …' : ''}</div>` : ''}
+        </div>
+      </div>`;
+    document.getElementById('randomActions').style.display = 'flex';
+  }
+
+  function viewRandomRecipe() {
+    if (!lastRandomRecipe) return;
+    closeModal('randomModal');
+    viewRecipe(lastRandomRecipe.id);
   }
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
