@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deeps Kitchen</title>
+  <title>Deep's Kitchen</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
@@ -37,14 +37,6 @@
     .sync-dot.syncing { background: var(--amber-light); animation: pulse 1s infinite; }
     .sync-dot.error { background: #e74c3c; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .setup-banner { background: #fff3cd; border-bottom: 1px solid #ffc107; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.88rem; color: #856404; }
-    .setup-banner strong { font-weight: 600; }
-    .setup-banner a { color: var(--amber); font-weight: 500; }
-    .setup-banner input { flex: 1; min-width: 260px; max-width: 480px; padding: 0.4rem 0.8rem; border-radius: 7px; border: 1.5px solid #ffc107; font-size: 0.85rem; font-family: 'DM Sans', sans-serif; outline: none; background: #fffdf5; }
-    .setup-banner input:focus { border-color: var(--amber); }
-    #dismissBanner { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #856404; opacity: 0.6; }
-    #dismissBanner:hover { opacity: 1; }
 
     .hero { background: linear-gradient(135deg, #1a3a6b 0%, #0f2447 100%); padding: 3rem 2rem 2.5rem; text-align: center; position: relative; overflow: hidden; }
     .hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
@@ -109,7 +101,7 @@
     .emoji-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
     .emoji-opt { font-size: 1.5rem; padding: 0.25rem 0.35rem; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; background: var(--cream); }
     .emoji-opt:hover { border-color: var(--amber-light); transform: scale(1.1); }
-    .emoji-opt.selected { border-color: var(--amber); background: #fde9d4; }
+    .emoji-opt.selected { border-color: var(--amber); background: #dbeafe; }
     .modal-footer { padding: 1rem 1.5rem 1.5rem; display: flex; gap: 0.7rem; justify-content: flex-end; border-top: 1px solid var(--border); }
 
     .view-emoji { font-size: 4rem; text-align: center; padding: 1.2rem 0 0.8rem; background: linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%); }
@@ -127,55 +119,33 @@
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--brown); color: var(--cream); padding: 0.75rem 1.4rem; border-radius: 10px; font-size: 0.9rem; z-index: 999; transition: transform 0.28s ease; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
-    @media(max-width:600px){ main{padding:1rem} .form-row{grid-template-columns:1fr} header{padding:0 1rem} .hero{padding:2rem 1rem 1.8rem} .setup-banner{padding:0.75rem 1rem} }
+    @media(max-width:600px){ main{padding:1rem} .form-row{grid-template-columns:1fr} header{padding:0 1rem} .hero{padding:2rem 1rem 1.8rem} }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><span>🍳</span> Deeps Kitchen</div>
+  <div class="logo"><span>🍳</span> Deep's Kitchen</div>
   <nav>
     <div class="sync-pill" onclick="refreshFromSheet()" title="Click to refresh">
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">Not connected</span>
     </div>
+    <button class="btn btn-ghost" onclick="openCatModal()">⚙️ Categories</button>
     <button class="btn btn-primary" onclick="openAddModal()">+ Add Recipe</button>
   </nav>
 </header>
 
-
-
 <div class="hero">
-  <h1>Deeps Kitchen</h1>
+  <h1>Deep's Kitchen</h1>
   <p>A shared cookbook — add yours and inspire others</p>
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search by name, ingredient, or tag…" oninput="renderRecipes()" />
   </div>
 </div>
 
-<div class="filters-bar">
+<div class="filters-bar" id="filtersBar">
   <span class="filter-label">Filter:</span>
-  <button class="tag-btn active" onclick="setCategory('all',this)">All</button>
-  <button class="tag-btn" onclick="setCategory('breakfast',this)">🌅 Breakfast</button>
-  <button class="tag-btn" onclick="setCategory('indian-breakfast',this)">🍛 Indian Breakfast</button>
-  <button class="tag-btn" onclick="setCategory('lunch',this)">🥗 Lunch</button>
-  <button class="tag-btn" onclick="setCategory('dinner',this)">🍽 Dinner</button>
-  <button class="tag-btn" onclick="setCategory('chicken-curry',this)">🍗 Chicken - Curry</button>
-  <button class="tag-btn" onclick="setCategory('chicken-rice',this)">🍚 Chicken - Rice</button>
-  <button class="tag-btn" onclick="setCategory('mutton',this)">🥩 Mutton</button>
-  <button class="tag-btn" onclick="setCategory('paneer',this)">🧀 Paneer</button>
-  <button class="tag-btn" onclick="setCategory('seafood',this)">🦐 Seafood</button>
-  <button class="tag-btn" onclick="setCategory('egg',this)">🥚 Egg</button>
-  <button class="tag-btn" onclick="setCategory('vegetarian-curry',this)">🥘 Vegetarian Curry</button>
-  <button class="tag-btn" onclick="setCategory('vegetable-sides',this)">🥦 Vegetable Sides</button>
-  <button class="tag-btn" onclick="setCategory('sambar',this)">🍲 Sambar</button>
-  <button class="tag-btn" onclick="setCategory('chutneys',this)">🫙 Chutneys</button>
-  <button class="tag-btn" onclick="setCategory('pasta',this)">🍝 Pasta</button>
-  <button class="tag-btn" onclick="setCategory('breads',this)">🫓 Breads</button>
-  <button class="tag-btn" onclick="setCategory('dessert',this)">🍰 Dessert</button>
-  <button class="tag-btn" onclick="setCategory('snack',this)">🥨 Quick Bites</button>
-  <button class="tag-btn" onclick="setCategory('drink',this)">🥤 Drink</button>
-  <button class="tag-btn" onclick="setCategory('other',this)">🍱 Other</button>
 </div>
 
 <main>
@@ -196,7 +166,7 @@
     <div class="modal-body">
       <div class="form-group"><label>Recipe Name *</label><input type="text" id="rName" placeholder="e.g. Grandma's Chicken Soup" /></div>
       <div class="form-row">
-        <div class="form-group"><label>Category</label><select id="rCategory"><option value="other">Other</option><option value="breakfast">Breakfast</option><option value="indian-breakfast">Indian Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="chicken-curry">Chicken - Curry</option><option value="chicken-rice">Chicken - Rice</option><option value="mutton">Mutton</option><option value="paneer">Paneer</option><option value="seafood">Seafood</option><option value="egg">Egg</option><option value="vegetarian-curry">Vegetarian Curry</option><option value="vegetable-sides">Vegetable Sides</option><option value="sambar">Sambar</option><option value="chutneys">Chutneys</option><option value="pasta">Pasta</option><option value="breads">Breads</option><option value="dessert">Dessert</option><option value="snack">Quick Bites</option><option value="drink">Drink</option></select></div>
+        <div class="form-group"><label>Category</label><select id="rCategory"></select></div>
         <div class="form-group"><label>Servings</label><input type="number" id="rServings" placeholder="4" min="1" /></div>
       </div>
       <div class="form-row">
@@ -221,26 +191,138 @@
   <div class="modal"><div id="viewContent"></div></div>
 </div>
 
-
+<!-- MANAGE CATEGORIES MODAL -->
+<div class="modal-overlay" id="catModal" style="display:none" onclick="closeModalOnOverlay(event,'catModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⚙️ Manage Categories</h2>
+      <button class="close-btn" onclick="closeModal('catModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:1.2rem">Add or remove categories. Changes apply instantly and are saved in your browser.</p>
+      <div style="display:flex;gap:0.6rem;margin-bottom:1.4rem">
+        <input type="text" id="newCatEmoji" placeholder="🍽" style="width:64px;text-align:center;font-size:1.2rem" maxlength="4" />
+        <input type="text" id="newCatName" placeholder="Category name…" style="flex:1" />
+        <button class="btn btn-primary" onclick="addCategory()">Add</button>
+      </div>
+      <div id="catList" style="display:flex;flex-direction:column;gap:0.5rem;max-height:340px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('catModal')">Done</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
   const EMOJIS = ['🍳','🥘','🍲','🥗','🍜','🍝','🍛','🍣','🍕','🥪','🌮','🌯','🥙','🧆','🥚','🧇','🥞','🧈','🍗','🥩','🍖','🥓','🌭','🍔','🍟','🧀','🥑','🥕','🥦','🍅','🍄','🫘','🌽','🫑','🧅','🧄','🫚','🧂','🍰','🎂','🧁','🍩','🍪','🍫','🍮','🍯','🧃','🥤','☕','🍵','🫖'];
 
+  const DEFAULT_CATEGORIES = [
+    { id:'breakfast', label:'Breakfast', emoji:'🌅' },
+    { id:'indian-breakfast', label:'Indian Breakfast', emoji:'🍛' },
+    { id:'lunch', label:'Lunch', emoji:'🥗' },
+    { id:'dinner', label:'Dinner', emoji:'🍽' },
+    { id:'chicken-curry', label:'Chicken - Curry', emoji:'🍗' },
+    { id:'chicken-rice', label:'Chicken - Rice', emoji:'🍚' },
+    { id:'mutton', label:'Mutton', emoji:'🥩' },
+    { id:'paneer', label:'Paneer', emoji:'🧀' },
+    { id:'seafood', label:'Seafood', emoji:'🦐' },
+    { id:'egg', label:'Egg', emoji:'🥚' },
+    { id:'vegetarian-curry', label:'Vegetarian Curry', emoji:'🥘' },
+    { id:'vegetable-sides', label:'Vegetable Sides', emoji:'🥦' },
+    { id:'sambar', label:'Sambar', emoji:'🍲' },
+    { id:'chutneys', label:'Chutneys', emoji:'🫙' },
+    { id:'pasta', label:'Pasta', emoji:'🍝' },
+    { id:'breads', label:'Breads', emoji:'🫓' },
+    { id:'dessert', label:'Dessert', emoji:'🍰' },
+    { id:'snack', label:'Quick Bites', emoji:'🥨' },
+    { id:'drink', label:'Drink', emoji:'🥤' },
+    { id:'other', label:'Other', emoji:'🍱' },
+  ];
+
+  let categories = JSON.parse(localStorage.getItem('deepKitchen_cats') || 'null') || DEFAULT_CATEGORIES;
   let recipes = [];
   let currentCategory = 'all';
   let editingId = null;
   let selectedEmoji = '🍳';
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOGbkXTAvnk74SgaPrhnLBX8pGflXRNr9cp4KVkL_OQPbIU2zDgbYDOlNWZLPQz8Q9/exec';
 
+  function saveCategories() { localStorage.setItem('deepKitchen_cats', JSON.stringify(categories)); }
+
+  function renderFilterBar() {
+    document.getElementById('filtersBar').innerHTML =
+      `<span class="filter-label">Filter:</span>
+      <button class="tag-btn${currentCategory==='all'?' active':''}" onclick="setCategory('all',this)">All</button>
+      ${categories.map(c=>`<button class="tag-btn${currentCategory===c.id?' active':''}" onclick="setCategory('${c.id}',this)">${c.emoji} ${c.label}</button>`).join('')}`;
+  }
+
+  function renderCatDropdown() {
+    const sel = document.getElementById('rCategory');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = categories.map(c=>`<option value="${c.id}">${c.emoji} ${c.label}</option>`).join('');
+    if ([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  }
+
+  function renderCatList() {
+    document.getElementById('catList').innerHTML = categories.map((c,i) => `
+      <div style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.7rem;background:var(--cream);border:1px solid var(--border);border-radius:9px">
+        <span style="font-size:1.3rem;width:2rem;text-align:center">${c.emoji}</span>
+        <span style="flex:1;font-size:0.92rem;font-weight:500">${c.label}</span>
+        <button onclick="moveCat(${i},-1)" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.1rem 0.3rem;color:var(--muted)" title="Move up">↑</button>
+        <button onclick="moveCat(${i},1)" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.1rem 0.3rem;color:var(--muted)" title="Move down">↓</button>
+        <button onclick="deleteCategory(${i})" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.1rem 0.4rem;color:#e74c3c" title="Remove">✕</button>
+      </div>`).join('');
+  }
+
+  function openCatModal() {
+    renderCatList();
+    document.getElementById('newCatName').value = '';
+    document.getElementById('newCatEmoji').value = '';
+    document.getElementById('catModal').style.display = 'flex';
+  }
+
+  function addCategory() {
+    const name = document.getElementById('newCatName').value.trim();
+    if (!name) { showToast('Please enter a category name.'); return; }
+    const emoji = document.getElementById('newCatEmoji').value.trim() || '🍽';
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    if (categories.find(c=>c.id===id)) { showToast('Category already exists!'); return; }
+    const otherIdx = categories.findIndex(c=>c.id==='other');
+    const newCat = { id, label: name, emoji };
+    if (otherIdx >= 0) categories.splice(otherIdx, 0, newCat);
+    else categories.push(newCat);
+    saveCategories();
+    document.getElementById('newCatName').value = '';
+    document.getElementById('newCatEmoji').value = '';
+    renderCatList(); renderFilterBar(); renderCatDropdown();
+    showToast(`"${name}" added!`);
+  }
+
+  function deleteCategory(i) {
+    const name = categories[i].label;
+    if (!confirm(`Remove "${name}"?`)) return;
+    const removedId = categories[i].id;
+    categories.splice(i, 1);
+    saveCategories();
+    if (currentCategory === removedId) currentCategory = 'all';
+    renderCatList(); renderFilterBar(); renderCatDropdown();
+    showToast(`"${name}" removed.`);
+  }
+
+  function moveCat(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= categories.length) return;
+    [categories[i], categories[j]] = [categories[j], categories[i]];
+    saveCategories();
+    renderCatList(); renderFilterBar(); renderCatDropdown();
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
+    renderFilterBar();
     refreshFromSheet();
   });
-
-  function handleUrlInput() {}
-  function dismissBanner() {}
-  function showSetupHelp() {}
 
   function setSyncState(state, label) {
     document.getElementById('syncDot').className = 'sync-dot ' + state;
@@ -248,7 +330,6 @@
   }
 
   async function api(params) {
-    if (!SCRIPT_URL) throw new Error('No URL');
     const res = await fetch(SCRIPT_URL + '?' + new URLSearchParams(params));
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
@@ -326,6 +407,7 @@
 
   function openAddModal(id=null) {
     editingId = id; selectedEmoji = '🍳';
+    renderCatDropdown();
     document.getElementById('modalTitle').textContent = id ? 'Edit Recipe' : 'Add New Recipe';
     if (id) {
       const r = recipes.find(x=>x.id===id);
@@ -341,7 +423,7 @@
       document.getElementById('rNotes').value = r.notes||'';
     } else {
       ['rName','rServings','rPrepTime','rCookTime','rIngredients','rSteps','rTags','rNotes'].forEach(f=>document.getElementById(f).value='');
-      document.getElementById('rCategory').value = 'other';
+      document.getElementById('rCategory').value = categories[0]?.id || 'other';
     }
     buildEmojiPicker();
     document.getElementById('addModal').style.display = 'flex';
@@ -366,18 +448,16 @@
     };
     const btn = document.getElementById('saveBtn');
     btn.textContent = 'Saving…'; btn.disabled = true;
-    if (SCRIPT_URL) {
-      try {
-        setSyncState('syncing', 'Saving…');
-        const res = await api({ action: 'save', data: JSON.stringify(recipe) });
-        if (res.error) throw new Error(res.error);
-        setSyncState('connected', 'Synced ✓');
-      } catch {
-        setSyncState('error', 'Save failed');
-        showToast('Could not save to Google Sheets.');
-        btn.textContent = 'Save Recipe'; btn.disabled = false;
-        return;
-      }
+    try {
+      setSyncState('syncing', 'Saving…');
+      const res = await api({ action: 'save', data: JSON.stringify(recipe) });
+      if (res.error) throw new Error(res.error);
+      setSyncState('connected', 'Synced ✓');
+    } catch {
+      setSyncState('error', 'Save failed');
+      showToast('Could not save to Google Sheets.');
+      btn.textContent = 'Save Recipe'; btn.disabled = false;
+      return;
     }
     if (editingId) { recipes[recipes.findIndex(r=>r.id===editingId)] = recipe; }
     else { recipes.unshift(recipe); }
@@ -416,14 +496,12 @@
 
   async function deleteRecipe(id) {
     if (!confirm('Delete this recipe?')) return;
-    if (SCRIPT_URL) {
-      try {
-        setSyncState('syncing', 'Deleting…');
-        const res = await api({ action: 'delete', id });
-        if (res.error) throw new Error(res.error);
-        setSyncState('connected', 'Synced ✓');
-      } catch { setSyncState('error', 'Delete failed'); showToast('Could not delete from Google Sheets.'); return; }
-    }
+    try {
+      setSyncState('syncing', 'Deleting…');
+      const res = await api({ action: 'delete', id });
+      if (res.error) throw new Error(res.error);
+      setSyncState('connected', 'Synced ✓');
+    } catch { setSyncState('error', 'Delete failed'); showToast('Could not delete from Google Sheets.'); return; }
     recipes = recipes.filter(r=>r.id!==id);
     closeModal('viewModal'); renderRecipes(); showToast('Recipe deleted.');
   }
